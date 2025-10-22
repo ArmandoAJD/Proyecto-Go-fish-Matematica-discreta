@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Fisch - Juego Justo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .game-container {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .game-board {
+            flex: 3;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .stats-panel {
+            flex: 1;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #f1c40f;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #f1c40f;
+            border-bottom: 1px solid #f1c40f;
+            padding-bottom: 5px;
+        }
+
+        .player-area, .bot-area {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .player-area {
+            background-color: rgba(39, 174, 96, 0.7);
+        }
+
+        .bot-area {
+            background-color: rgba(231, 76, 60, 0.7);
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 150px;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+        }
+
+        .card-front {
+            background-color: white;
+            transform: rotateY(0deg);
+        }
+
+        .card-back {
+            background: radial-gradient(circle at center, #1a2a4a, #0f1a30);
+            border: 3px solid #f1f1f1;
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-back-pattern {
+            background: repeating-linear-gradient(
+                45deg,
+                #f1c40f,
+                #f1c40f 5px,
+                #e67e22 5px,
+                #e67e22 10px
+            );
+            width: 80%;
+            height: 80%;
+            border-radius: 4px;
+            opacity: 0.7;
+        }
+
+        .player-card {
+            transform: rotateY(0deg);
+        }
+
+        .bot-card {
+            transform: rotateY(180deg);
+        }
+
+        .player-card:hover {
+            transform: translateY(-10px) rotateY(0deg);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.selected {
+            box-shadow: 0 0 10px #f1c40f;
+            transform: translateY(-5px) rotateY(0deg);
+        }
+
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+            align-self: flex-start;
+        }
+
+        .card-suit {
+            font-size: 30px;
+            align-self: center;
+        }
+
+        .card-value.bottom {
+            align-self: flex-end;
+            transform: rotate(180deg);
+        }
+
+        .hearts, .diamonds {
+            color: red;
+        }
+
+        .clubs, .spades {
+            color: black;
+        }
+
+        .deck-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .deck {
+            width: 80px;
+            height: 120px;
+            background: radial-gradient(circle at center, #1a2a4a, #0f1a30);
+            border: 3px solid #f1f1f1;
+            border-radius: 8px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .deck::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: repeating-linear-gradient(
+                45deg,
+                #f1c40f,
+                #f1c40f 5px,
+                #e67e22 5px,
+                #e67e22 10px
+            );
+            border-radius: 5px;
+            opacity: 0.7;
+        }
+
+        .deck-label {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #f1c40f;
+        }
+
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: rgba(155, 89, 182, 0.8);
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sets {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .set {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .empty-hand-message {
+            color: #f1c40f;
+            font-style: italic;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .stats-section {
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #2c3e50;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            border-radius: 5px;
+        }
+
+        .probability-chart {
+            margin-top: 15px;
+        }
+
+        .probability-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 13px;
+        }
+
+        .probability-card {
+            width: 20px;
+            height: 30px;
+            background-color: white;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .probability-value {
+            width: 35px;
+            text-align: right;
+            margin-right: 8px;
+        }
+
+        .probability-bar-container {
+            flex: 1;
+            height: 8px;
+            background-color: #2c3e50;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .probability-bar {
+            height: 100%;
+            background: linear-gradient(to right, #e74c3c, #f39c12);
+            border-radius: 4px;
+        }
+
+        .card-transition {
+            transition: all 0.5s ease;
+            position: absolute;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-board">
+            <h1>Go Fisch - Juego de Cartas</h1>
+            
+            <div class="bot-area">
+                <h2>Bot</h2>
+                <div class="cards-container" id="bot-cards"></div>
+                <div class="sets">
+                    <div class="set">
+                        <h3>Juegos: <span id="bot-sets">0</span></h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="deck-container">
+                <div class="deck" id="deck"></div>
+                <div class="deck-label">Cartas: <span id="deck-count">0</span></div>
+            </div>
+            
+            <div class="message" id="message">Es tu turno. Selecciona una carta para pedir al bot.</div>
+            
+            <div class="player-area">
+                <h2>Tus Cartas</h2>
+                <div class="cards-container" id="player-cards"></div>
+                <div class="controls">
+                    <button id="ask-btn" disabled>Pedir carta</button>
+                    <button id="go-fisch-btn">Go Fisch</button>
+                </div>
+                <div class="sets">
+                    <div class="set">
+                        <h3>Juegos: <span id="player-sets">0</span></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <h2>Estadísticas</h2>
+            
+            <div class="stats-section">
+                <h3>Estado del Juego</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Cartas en mazo:</span>
+                    <span id="deck-count-stat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Turno actual:</span>
+                    <span id="current-turn">Jugador</span>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h3>Tus Estadísticas</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Cartas en mano:</span>
+                    <span id="player-card-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Juegos completados:</span>
+                    <span id="player-sets-stat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Éxito al pedir:</span>
+                    <span id="player-success-rate">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" id="player-success-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h3>Estadísticas del Bot</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Cartas en mano:</span>
+                    <span id="bot-card-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Juegos completados:</span>
+                    <span id="bot-sets-stat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Éxito al pedir:</span>
+                    <span id="bot-success-rate">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" id="bot-success-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="stats-section probability-chart">
+                <h3>Probabilidades</h3>
+                <p>Probabilidad de que el bot tenga:</p>
+                <div id="probability-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // VARIABLES GLOBALES DEL JUEGO
+        // =============================================
+        let deck = [];
+        let playerHand = [];
+        let botHand = [];
+        let playerSets = 0;
+        let botSets = 0;
+        let currentTurn = 'player';
+        let selectedCard = null;
+        
+        // Estadísticas
+        let playerAskAttempts = 0;
+        let playerSuccessfulAsks = 0;
+        let botAskAttempts = 0;
+        let botSuccessfulAsks = 0;
+
+        // =============================================
+        // INICIALIZACIÓN DEL JUEGO
+        // =============================================
+        function initGame() {
+            createDeck();
+            shuffleDeck();
+            dealCards();
+            updateUI();
+            updateMessage("Es tu turno. Selecciona una carta para pedir al bot.");
+            enablePlayerTurn();
+            
+            // Evento para el mazo
+            document.getElementById('deck').addEventListener('click', () => {
+                if (currentTurn === 'player') {
+                    goFisch();
+                }
+            });
+        }
+
+        // =============================================
+        // FUNCIONES DEL MAZO
+        // =============================================
+        function createDeck() {
+            const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            
+            deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value });
+                }
+            }
+        }
+
+        function shuffleDeck() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function dealCards() {
+            playerHand = [];
+            botHand = [];
+            
+            for (let i = 0; i < 5; i++) {
+                if (deck.length > 0) playerHand.push(deck.pop());
+                if (deck.length > 0) botHand.push(deck.pop());
+            }
+            
+            // Verificar que ambos jugadores tengan cartas
+            if (playerHand.length === 0 && deck.length > 0) {
+                playerHand.push(deck.pop());
+            }
+            if (botHand.length === 0 && deck.length > 0) {
+                botHand.push(deck.pop());
+            }
+        }
+
+        // =============================================
+        // ACTUALIZACIÓN DE LA INTERFAZ
+        // =============================================
+        function updateUI() {
+            updatePlayerCards();
+            updateBotCards();
+            updateSets();
+            updateDeck();
+            updateStats();
+        }
+
+        function updateDeck() {
+            document.getElementById('deck-count').textContent = deck.length;
+            document.getElementById('deck-count-stat').textContent = deck.length;
+        }
+
+        function updatePlayerCards() {
+            const playerCardsContainer = document.getElementById('player-cards');
+            playerCardsContainer.innerHTML = '';
+            
+            if (playerHand.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-hand-message';
+                emptyMessage.textContent = 'No tienes cartas. Pulsa "Go Fisch" para robar.';
+                playerCardsContainer.appendChild(emptyMessage);
+                return;
+            }
+            
+            playerHand.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = `card player-card ${selectedCard === index ? 'selected' : ''}`;
+                
+                cardElement.innerHTML = `
+                    <div class="card-face card-front">
+                        <div class="card-value ${card.suit}">${card.value}</div>
+                        <div class="card-suit ${card.suit}">${getSuitSymbol(card.suit)}</div>
+                        <div class="card-value bottom ${card.suit}">${card.value}</div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="card-back-pattern"></div>
+                    </div>
+                `;
+                
+                cardElement.dataset.index = index;
+                cardElement.addEventListener('click', () => selectCard(index));
+                playerCardsContainer.appendChild(cardElement);
+            });
+        }
+
+        function updateBotCards() {
+            const botCardsContainer = document.getElementById('bot-cards');
+            botCardsContainer.innerHTML = '';
+            
+            if (botHand.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-hand-message';
+                emptyMessage.textContent = 'El bot no tiene cartas.';
+                botCardsContainer.appendChild(emptyMessage);
+                return;
+            }
+            
+            botHand.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card bot-card';
+                
+                cardElement.innerHTML = `
+                    <div class="card-face card-front">
+                        <div class="card-value ${card.suit}">${card.value}</div>
+                        <div class="card-suit ${card.suit}">${getSuitSymbol(card.suit)}</div>
+                        <div class="card-value bottom ${card.suit}">${card.value}</div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="card-back-pattern"></div>
+                    </div>
+                `;
+                
+                botCardsContainer.appendChild(cardElement);
+            });
+        }
+
+        function getSuitSymbol(suit) {
+            switch (suit) {
+                case 'hearts': return '♥';
+                case 'diamonds': return '♦';
+                case 'clubs': return '♣';
+                case 'spades': return '♠';
+                default: return '';
+            }
+        }
+
+        // =============================================
+        // GESTIÓN DE TURNOS
+        // =============================================
+        function selectCard(index) {
+            if (currentTurn !== 'player' || playerHand.length === 0) return;
+            
+            // Deseleccionar todas las cartas
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Seleccionar la nueva carta
+            selectedCard = index;
+            document.querySelector(`.player-card[data-index="${index}"]`).classList.add('selected');
+            
+            // Habilitar botón de pedir
+            document.getElementById('ask-btn').disabled = false;
+        }
+
+        function enablePlayerTurn() {
+            currentTurn = 'player';
+            document.getElementById('go-fisch-btn').disabled = false;
+            document.getElementById('current-turn').textContent = 'Jugador';
+            
+            // Verificar si el jugador tiene cartas para pedir
+            if (playerHand.length === 0 && deck.length > 0) {
+                updateMessage("No tienes cartas. Pulsa 'Go Fisch' para robar.");
+                document.getElementById('ask-btn').disabled = true;
+            } else if (playerHand.length > 0) {
+                updateMessage("Es tu turno. Selecciona una carta para pedir al bot.");
+            } else {
+                updateMessage("No tienes cartas y no quedan en el mazo. Turno del bot.");
+                enableBotTurn();
+            }
+        }
+
+        function enableBotTurn() {
+            currentTurn = 'bot';
+            document.getElementById('ask-btn').disabled = true;
+            document.getElementById('go-fisch-btn').disabled = true;
+            document.getElementById('current-turn').textContent = 'Bot';
+            
+            // El bot juega después de un breve retraso
+            setTimeout(botTurn, 1500);
+        }
+
+        // =============================================
+        // LÓGICA DEL BOT
+        // =============================================
+        function botTurn() {
+            if (currentTurn !== 'bot') return;
+            
+            if (botHand.length === 0) {
+                if (deck.length > 0) {
+                    drawCardForBot();
+                } else {
+                    updateMessage("El bot no tiene cartas para pedir. Tu turno.");
+                    enablePlayerTurn();
+                }
+                return;
+            }
+            
+            // El bot selecciona un valor que tiene en su mano
+            const botValues = botHand.map(card => card.value);
+            const uniqueValues = [...new Set(botValues)];
+            
+            // Filtrar valores que el jugador podría tener (basado en probabilidades)
+            const probableValues = uniqueValues.filter(value => {
+                return playerHand.some(card => card.value === value);
+            });
+            
+            // Seleccionar un valor (prefiere los valores probables)
+            const selectedValue = probableValues.length > 0 
+                ? probableValues[Math.floor(Math.random() * probableValues.length)]
+                : uniqueValues[Math.floor(Math.random() * uniqueValues.length)];
+            
+            updateMessage(`El bot pregunta: ¿Tienes algún ${selectedValue}?`);
+            botAskAttempts++;
+            
+            // Verificar si el jugador tiene cartas del valor pedido
+            const matchingCards = playerHand.filter(card => card.value === selectedValue);
+            
+            if (matchingCards.length > 0) {
+                botSuccessfulAsks++;
+                // El jugador entrega TODAS las cartas al bot
+                setTimeout(() => {
+                    updateMessage(`¡Tienes ${matchingCards.length} ${selectedValue}! El bot las toma.`);
+                    
+                    // Eliminar TODAS las cartas del valor pedido de la mano del jugador
+                    playerHand = playerHand.filter(card => card.value !== selectedValue);
+                    
+                    // Agregar TODAS las cartas a la mano del bot
+                    botHand.push(...matchingCards);
+                    
+                    checkForSets('bot');
+                    updateUI();
+                    
+                    // El bot juega de nuevo si aún tiene cartas
+                    if (botHand.length > 0) {
+                        setTimeout(botTurn, 1500);
+                    } else {
+                        enablePlayerTurn();
+                    }
+                }, 1500);
+            } else {
+                // El jugador no tiene las cartas, el bot pesca
+                setTimeout(() => {
+                    updateMessage(`No tienes ${selectedValue}. El bot pesca una carta.`);
+                    drawCardForBot(selectedValue);
+                }, 1500);
+            }
+        }
+
+        function drawCardForBot(requestedValue = null) {
+            if (deck.length > 0) {
+                const drawnCard = deck.pop();
+                botHand.push(drawnCard);
+                
+                // Mostrar animación de carta pescada
+                const deckElement = document.getElementById('deck');
+                const rect = deckElement.getBoundingClientRect();
+                
+                const tempCard = document.createElement('div');
+                tempCard.className = 'card card-transition';
+                tempCard.style.left = `${rect.left}px`;
+                tempCard.style.top = `${rect.top}px`;
+                tempCard.innerHTML = `
+                    <div class="card-face card-back">
+                        <div class="card-back-pattern"></div>
+                    </div>
+                `;
+                document.body.appendChild(tempCard);
+                
+                // Animación
+                setTimeout(() => {
+                    const botArea = document.querySelector('.bot-area .cards-container').getBoundingClientRect();
+                    tempCard.style.left = `${botArea.left + 20}px`;
+                    tempCard.style.top = `${botArea.top + 20}px`;
+                    tempCard.style.transform = 'scale(0.7)';
+                    tempCard.style.opacity = '0.7';
+                    
+                    setTimeout(() => {
+                        tempCard.remove();
+                        updateMessage(`El bot pescó una carta.`);
+                        
+                        // Si el bot pescó el valor que pedía, juega de nuevo
+                        if (requestedValue && drawnCard.value === requestedValue && botHand.length > 0) {
+                            setTimeout(() => {
+                                updateMessage(`¡El bot pescó el ${requestedValue} que pedía! Juega de nuevo.`);
+                                updateUI();
+                                setTimeout(botTurn, 1500);
+                            }, 1500);
+                        } else {
+                            updateUI();
+                            enablePlayerTurn();
+                        }
+                    }, 500);
+                }, 10);
+            } else {
+                updateMessage("No quedan cartas para pescar. Tu turno.");
+                enablePlayerTurn();
+            }
+        }
+
+        // =============================================
+        // ACCIONES DEL JUGADOR
+        // =============================================
+        function askForCard() {
+            if (currentTurn !== 'player' || selectedCard === null || playerHand.length === 0) return;
+            
+            const selectedValue = playerHand[selectedCard].value;
+            updateMessage(`Pides al bot: ¿Tienes algún ${selectedValue}?`);
+            playerAskAttempts++;
+            
+            // Verificar si el bot tiene cartas del valor pedido
+            const matchingCards = botHand.filter(card => card.value === selectedValue);
+            
+            if (matchingCards.length > 0) {
+                playerSuccessfulAsks++;
+                // El bot entrega TODAS las cartas al jugador
+                setTimeout(() => {
+                    updateMessage(`¡El bot tiene ${matchingCards.length} ${selectedValue}(s)! Las tomas.`);
+                    
+                    // Eliminar TODAS las cartas del valor pedido de la mano del bot
+                    botHand = botHand.filter(card => card.value !== selectedValue);
+                    
+                    // Agregar TODAS las cartas a la mano del jugador
+                    playerHand.push(...matchingCards);
+                    
+                    checkForSets('player');
+                    updateUI();
+                    
+                    // Deseleccionar carta
+                    selectedCard = null;
+                    
+                    // El jugador juega de nuevo si aún tiene cartas
+                    if (playerHand.length > 0) {
+                        enablePlayerTurn();
+                    } else {
+                        enableBotTurn();
+                    }
+                }, 1500);
+            } else {
+                // El bot no tiene las cartas, el jugador pesca
+                setTimeout(() => {
+                    updateMessage(`El bot no tiene ${selectedValue}. Pesca una carta.`);
+                    goFisch(true);
+                }, 1500);
+            }
+            
+            document.getElementById('ask-btn').disabled = true;
+        }
+
+        function goFisch(fromAsk = false) {
+            if (currentTurn !== 'player') return;
+            
+            if (deck.length > 0) {
+                const drawnCard = deck.pop();
+                playerHand.push(drawnCard);
+                
+                // Mostrar animación de carta pescada
+                const deckElement = document.getElementById('deck');
+                const rect = deckElement.getBoundingClientRect();
+                
+                const tempCard = document.createElement('div');
+                tempCard.className = 'card card-transition';
+                tempCard.style.left = `${rect.left}px`;
+                tempCard.style.top = `${rect.top}px`;
+                tempCard.innerHTML = `
+                    <div class="card-face card-back">
+                        <div class="card-back-pattern"></div>
+                    </div>
+                `;
+                document.body.appendChild(tempCard);
+                
+                // Animación
+                setTimeout(() => {
+                    const playerCardsContainer = document.getElementById('player-cards');
+                    const playerRect = playerCardsContainer.getBoundingClientRect();
+                    tempCard.style.left = `${playerRect.left + 20}px`;
+                    tempCard.style.top = `${playerRect.top + 20}px`;
+                    tempCard.style.transform = 'scale(0.7)';
+                    tempCard.style.opacity = '0.7';
+                    
+                    setTimeout(() => {
+                        tempCard.remove();
+                        updateMessage(`Pescaste una carta. ${fromAsk ? '' : 'Turno del bot.'}`);
+                        updateUI();
+                        
+                        if (fromAsk) {
+                            // Verificar si es la carta que se pedía
+                            const selectedValue = selectedCard !== null ? playerHand[selectedCard]?.value : null;
+                            if (selectedValue && drawnCard.value === selectedValue) {
+                                setTimeout(() => {
+                                    updateMessage(`¡Pescaste el ${selectedValue} que pedías! Juega de nuevo.`);
+                                    enablePlayerTurn();
+                                }, 1500);
+                            } else {
+                                enableBotTurn();
+                            }
+                        } else {
+                            enableBotTurn();
+                        }
+                        
+                        // Deseleccionar carta si había una seleccionada
+                        selectedCard = null;
+                    }, 500);
+                }, 10);
+            } else {
+                updateMessage("No quedan cartas para pescar. Turno del bot.");
+                enableBotTurn();
+                
+                // Deseleccionar carta si había una seleccionada
+                selectedCard = null;
+            }
+        }
+
+        // =============================================
+        // LÓGICA DEL JUEGO
+        // =============================================
+        function checkForSets(player) {
+            const hand = player === 'player' ? playerHand : botHand;
+            const valueCounts = {};
+            
+            // Contar cuántas cartas hay de cada valor
+            hand.forEach(card => {
+                valueCounts[card.value] = (valueCounts[card.value] || 0) + 1;
+            });
+            
+            // Verificar qué valores tienen 4 cartas
+            for (const [value, count] of Object.entries(valueCounts)) {
+                if (count >= 4) {
+                    // Eliminar las 4 cartas del valor
+                    if (player === 'player') {
+                        playerHand = playerHand.filter(card => card.value !== value);
+                        playerSets++;
+                        document.getElementById('player-sets').textContent = playerSets;
+                        document.getElementById('player-sets-stat').textContent = playerSets;
+                        updateMessage(`¡Completaste un juego de ${value}!`);
+                    } else {
+                        botHand = botHand.filter(card => card.value !== value);
+                        botSets++;
+                        document.getElementById('bot-sets').textContent = botSets;
+                        document.getElementById('bot-sets-stat').textContent = botSets;
+                        updateMessage(`¡El bot completó un juego de ${value}!`);
+                    }
+                }
+            }
+            
+            // Verificar si el juego ha terminado
+            checkGameEnd();
+            updateStats();
+        }
+
+        function checkGameEnd() {
+            if (deck.length === 0 && (playerHand.length === 0 || botHand.length === 0)) {
+                // Juego terminado
+                setTimeout(() => {
+                    if (playerSets > botSets) {
+                        updateMessage(`¡Ganaste! Juegos completados: ${playerSets} a ${botSets}`);
+                    } else if (botSets > playerSets) {
+                        updateMessage(`¡El bot ganó! Juegos completados: ${botSets} a ${playerSets}`);
+                    } else {
+                        updateMessage(`¡Empate! Ambos completaron ${playerSets} juegos.`);
+                    }
+                    
+                    // Deshabilitar controles
+                    document.getElementById('ask-btn').disabled = true;
+                    document.getElementById('go-fisch-btn').disabled = true;
+                }, 1000);
+            }
+        }
+
+        // =============================================
+        // ESTADÍSTICAS Y MENSAJES
+        // =============================================
+        function updateMessage(text) {
+            document.getElementById('message').textContent = text;
+        }
+
+        function updateSets() {
+            document.getElementById('player-sets').textContent = playerSets;
+            document.getElementById('bot-sets').textContent = botSets;
+        }
+
+        function updateStats() {
+            // Cartas en mano
+            document.getElementById('player-card-count').textContent = playerHand.length;
+            document.getElementById('bot-card-count').textContent = botHand.length;
+            
+            // Tasas de éxito
+            const playerRate = playerAskAttempts > 0 ? Math.round((playerSuccessfulAsks / playerAskAttempts) * 100) : 0;
+            const botRate = botAskAttempts > 0 ? Math.round((botSuccessfulAsks / botAskAttempts) * 100) : 0;
+            
+            document.getElementById('player-success-rate').textContent = `${playerRate}%`;
+            document.getElementById('bot-success-rate').textContent = `${botRate}%`;
+            document.getElementById('player-success-bar').style.width = `${playerRate}%`;
+            document.getElementById('bot-success-bar').style.width = `${botRate}%`;
+            
+            // Calcular probabilidades
+            updateProbabilities();
+        }
+
+        function updateProbabilities() {
+            const probabilityList = document.getElementById('probability-list');
+            probabilityList.innerHTML = '';
+            
+            if (currentTurn !== 'player') {
+                probabilityList.innerHTML = '<p>Es el turno del bot</p>';
+                return;
+            }
+            
+            // Contar cartas conocidas
+            const knownCards = [...playerHand];
+            const discardedCards = 52 - deck.length - playerHand.length - botHand.length;
+            
+            // Calcular probabilidades para cada valor
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const probabilities = {};
+            
+            values.forEach(value => {
+                // Cartas de este valor que ya se han visto
+                const seenCount = knownCards.filter(card => card.value === value).length;
+                
+                // Cartas totales de este valor (4 por valor en un mazo estándar)
+                const totalCount = 4;
+                
+                // Cartas restantes de este valor que podrían estar en el mazo o en la mano del bot
+                const remainingCount = totalCount - seenCount;
+                
+                // Cartas totales desconocidas (mano del bot + mazo)
+                const totalUnknown = botHand.length + deck.length;
+                
+                // Probabilidad de que el bot tenga al menos una carta de este valor
+                if (remainingCount > 0 && totalUnknown > 0) {
+                    // Probabilidad usando distribución hipergeométrica simplificada
+                    const probability = Math.round((1 - Math.pow((totalUnknown - remainingCount) / totalUnknown, botHand.length)) * 100);
+                    probabilities[value] = probability;
+                } else {
+                    probabilities[value] = 0;
+                }
+            });
+            
+            // Ordenar valores por probabilidad descendente
+            const sortedValues = Object.entries(probabilities)
+                .sort((a, b) => b[1] - a[1]);
+            
+            // Mostrar las probabilidades
+            sortedValues.forEach(([value, prob]) => {
+                const item = document.createElement('div');
+                item.className = 'probability-item';
+                
+                const cardElement = document.createElement('div');
+                cardElement.className = 'probability-card';
+                cardElement.textContent = value;
+                
+                const probElement = document.createElement('div');
+                probElement.className = 'probability-value';
+                probElement.textContent = `${prob}%`;
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = 'probability-bar-container';
+                
+                const bar = document.createElement('div');
+                bar.className = 'probability-bar';
+                bar.style.width = `${prob}%`;
+                
+                barContainer.appendChild(bar);
+                
+                item.appendChild(cardElement);
+                item.appendChild(probElement);
+                item.appendChild(barContainer);
+                
+                probabilityList.appendChild(item);
+            });
+        }
+
+        // =============================================
+        // EVENT LISTENERS
+        // =============================================
+        document.getElementById('ask-btn').addEventListener('click', askForCard);
+        document.getElementById('go-fisch-btn').addEventListener('click', () => goFisch(false));
+
+        // =============================================
+        // INICIAR EL JUEGO
+        // =============================================
+        initGame();
+    </script>
+</body>
+</html>

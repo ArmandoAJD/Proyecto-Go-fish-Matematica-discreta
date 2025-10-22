@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Fisch</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#2c3e50;color:#fff;margin:0;padding:20px;display:flex;justify-content:center}.game-container{display:flex;max-width:1200px;width:100%;gap:20px}.game-board{flex:3;background:#34495e;padding:20px;border-radius:10px;box-shadow:0 0 20px #00000080}.stats-panel{flex:1;background:#34495e;padding:20px;border-radius:10px;box-shadow:0 0 20px #00000080}h1{color:#f1c40f;text-align:center;margin-bottom:30px}h2{color:#f1c40f;border-bottom:1px solid #f1c40f;padding-bottom:5px}.player-area,.bot-area{margin:20px 0;padding:15px;border-radius:8px}.player-area{background:rgba(39,174,96,0.7)}.bot-area{background:rgba(231,76,60,0.7)}.cards-container{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:20px 0;min-height:150px}.card{width:80px;height:120px;border-radius:8px;display:flex;justify-content:center;align-items:center;box-shadow:2px 2px 5px #0000004d;cursor:pointer;transition:all 0.3s ease;position:relative;transform-style:preserve-3d}.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:8px;display:flex;flex-direction:column;justify-content:space-between;padding:5px}.card-front{background:#fff;transform:rotateY(0)}.card-back{background:radial-gradient(circle at center,#1a2a4a,#0f1a30);border:3px solid #f1f1f1;transform:rotateY(180deg);display:flex;justify-content:center;align-items:center}.card-back-pattern{background:repeating-linear-gradient(45deg,#f1c40f,#f1c40f 5px,#e67e22 5px,#e67e22 10px);width:80%;height:80%;border-radius:4px;opacity:0.7}.player-card{transform:rotateY(0)}.bot-card{transform:rotateY(180deg)}.player-card:hover{transform:translateY(-10px) rotateY(0);box-shadow:0 10px 15px #0000004d}.card.selected{box-shadow:0 0 10px #f1c40f;transform:translateY(-5px) rotateY(0)}.card-value{font-size:20px;font-weight:700;align-self:flex-start}.card-suit{font-size:30px;align-self:center}.card-value.bottom{align-self:flex-end;transform:rotate(180deg)}.hearts,.diamonds{color:red}.clubs,.spades{color:#000}.deck-container{text-align:center;margin:20px 0}.deck{width:80px;height:120px;background:radial-gradient(circle at center,#1a2a4a,#0f1a30);border:3px solid #f1f1f1;border-radius:8px;box-shadow:2px 2px 5px #0000004d;display:inline-flex;justify-content:center;align-items:center;cursor:pointer;position:relative}.deck::before{content:'';position:absolute;top:2px;left:2px;right:2px;bottom:2px;background:repeating-linear-gradient(45deg,#f1c40f,#f1c40f 5px,#e67e22 5px,#e67e22 10px);border-radius:5px;opacity:0.7}.deck-label{margin-top:8px;font-size:14px;color:#f1c40f}.controls{margin:20px 0;text-align:center}button{background:#3498db;color:#fff;border:none;padding:10px 20px;margin:5px;border-radius:5px;cursor:pointer;font-size:14px;transition:all 0.3s}button:hover{background:#2980b9;transform:translateY(-2px)}button:disabled{background:#7f8c8d;cursor:not-allowed;transform:none}.message{margin:20px 0;padding:10px;background:rgba(155,89,182,0.8);border-radius:5px;font-weight:700;text-align:center;font-size:16px}.sets{display:flex;justify-content:space-around;margin-top:20px}.set{background:rgba(255,255,255,0.1);padding:10px;border-radius:5px;text-align:center}.empty-hand-message{color:#f1c40f;font-style:italic;text-align:center;margin:15px 0;font-size:14px}.stats-section{margin-bottom:15px;background:rgba(255,255,255,0.1);padding:12px;border-radius:5px}.stat-item{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}.stat-label{font-weight:700;color:#f1c40f}.progress-bar{height:10px;background:#2c3e50;border-radius:5px;margin-top:5px;overflow:hidden}.progress{height:100%;background:linear-gradient(to right,#3498db,#2ecc71);border-radius:5px}.probability-chart{margin-top:15px}.probability-item{display:flex;align-items:center;margin:6px 0;font-size:13px}.probability-card{width:20px;height:30px;background:#fff;border-radius:3px;margin-right:8px;display:flex;justify-content:center;align-items:center;color:#000;font-weight:700;font-size:12px}.probability-value{width:35px;text-align:right;margin-right:8px}.probability-bar-container{flex:1;height:8px;background:#2c3e50;border-radius:4px;overflow:hidden}.probability-bar{height:100%;background:linear-gradient(to right,#e74c3c,#f39c12);border-radius:4px}.card-transition{transition:all 0.5s ease;position:absolute;z-index:10}
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-board">
+            <h1>Go Fisch</h1>
+            <div class="bot-area">
+                <h2>Bot</h2>
+                <div class="cards-container" id="bot-cards"></div>
+                <div class="sets"><div class="set"><h3>Juegos: <span id="bot-sets">0</span></h3></div></div>
+            </div>
+            <div class="deck-container">
+                <div class="deck" id="deck"></div>
+                <div class="deck-label">Cartas: <span id="deck-count">0</span></div>
+            </div>
+            <div class="message" id="message">Es tu turno. Selecciona una carta para pedir al bot.</div>
+            <div class="player-area">
+                <h2>Tus Cartas</h2>
+                <div class="cards-container" id="player-cards"></div>
+                <div class="controls">
+                    <button id="ask-btn" disabled>Pedir carta</button>
+                    <button id="go-fisch-btn">Go Fisch</button>
+                </div>
+                <div class="sets"><div class="set"><h3>Juegos: <span id="player-sets">0</span></h3></div></div>
+            </div>
+        </div>
+        <div class="stats-panel">
+            <h2>Estadísticas</h2>
+            <div class="stats-section">
+                <h3>Estado del Juego</h3>
+                <div class="stat-item"><span class="stat-label">Cartas en mazo:</span><span id="deck-count-stat">0</span></div>
+                <div class="stat-item"><span class="stat-label">Turno actual:</span><span id="current-turn">Jugador</span></div>
+            </div>
+            <div class="stats-section">
+                <h3>Tus Estadísticas</h3>
+                <div class="stat-item"><span class="stat-label">Cartas en mano:</span><span id="player-card-count">0</span></div>
+                <div class="stat-item"><span class="stat-label">Juegos completados:</span><span id="player-sets-stat">0</span></div>
+                <div class="stat-item"><span class="stat-label">Éxito al pedir:</span><span id="player-success-rate">0%</span></div>
+                <div class="progress-bar"><div class="progress" id="player-success-bar" style="width:0%"></div></div>
+            </div>
+            <div class="stats-section">
+                <h3>Estadísticas del Bot</h3>
+                <div class="stat-item"><span class="stat-label">Cartas en mano:</span><span id="bot-card-count">0</span></div>
+                <div class="stat-item"><span class="stat-label">Juegos completados:</span><span id="bot-sets-stat">0</span></div>
+                <div class="stat-item"><span class="stat-label">Éxito al pedir:</span><span id="bot-success-rate">0%</span></div>
+                <div class="progress-bar"><div class="progress" id="bot-success-bar" style="width:0%"></div></div>
+            </div>
+            <div class="stats-section probability-chart">
+                <h3>Probabilidades</h3>
+                <p>Probabilidad de que el bot tenga:</p>
+                <div id="probability-list"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let d=[],pH=[],bH=[],pS=0,bS=0,cT='p',sC=null,pAA=0,pSA=0,bAA=0,bSA=0;
+        function iG(){cD();sD();dC();uI();uM("Es tu turno. Selecciona una carta para pedir al bot.");ePT();document.getElementById('deck').addEventListener('click',()=>{if(cT==='p')gF();});}
+        function cD(){const s=['hearts','diamonds','clubs','spades'],v=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];d=[];for(let s1 of s)for(let v1 of v)d.push({suit:s1,value:v1});}
+        function sD(){for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}}
+        function dC(){pH=[];bH=[];for(let i=0;i<5;i++){if(d.length>0)pH.push(d.pop());if(d.length>0)bH.push(d.pop());}if(pH.length===0&&d.length>0)pH.push(d.pop());if(bH.length===0&&d.length>0)bH.push(d.pop());}
+        function uI(){uPC();uBC();uS();uD();uSt();}
+        function uD(){document.getElementById('deck-count').textContent=d.length;document.getElementById('deck-count-stat').textContent=d.length;}
+        function uPC(){const c=document.getElementById('player-cards');c.innerHTML='';if(pH.length===0){const m=document.createElement('div');m.className='empty-hand-message';m.textContent='No tienes cartas. Pulsa "Go Fisch" para robar.';c.appendChild(m);return;}pH.forEach((cd,i)=>{const e=document.createElement('div');e.className=`card player-card ${sC===i?'selected':''}`;e.innerHTML=`<div class="card-face card-front"><div class="card-value ${cd.suit}">${cd.value}</div><div class="card-suit ${cd.suit}">${gSS(cd.suit)}</div><div class="card-value bottom ${cd.suit}">${cd.value}</div></div><div class="card-face card-back"><div class="card-back-pattern"></div></div>`;e.dataset.index=i;e.addEventListener('click',()=>sCrd(i));c.appendChild(e);});}
+        function uBC(){const c=document.getElementById('bot-cards');c.innerHTML='';if(bH.length===0){const m=document.createElement('div');m.className='empty-hand-message';m.textContent='El bot no tiene cartas.';c.appendChild(m);return;}bH.forEach((cd,i)=>{const e=document.createElement('div');e.className='card bot-card';e.innerHTML=`<div class="card-face card-front"><div class="card-value ${cd.suit}">${cd.value}</div><div class="card-suit ${cd.suit}">${gSS(cd.suit)}</div><div class="card-value bottom ${cd.suit}">${cd.value}</div></div><div class="card-face card-back"><div class="card-back-pattern"></div></div>`;c.appendChild(e);});}
+        function gSS(s){switch(s){case'hearts':return'♥';case'diamonds':return'♦';case'clubs':return'♣';case'spades':return'♠';default:return'';}}
+        function sCrd(i){if(cT!=='p'||pH.length===0)return;document.querySelectorAll('.player-card').forEach(c=>{c.classList.remove('selected');});sC=i;document.querySelector(`.player-card[data-index="${i}"]`).classList.add('selected');document.getElementById('ask-btn').disabled=false;}
+        function ePT(){cT='p';document.getElementById('go-fisch-btn').disabled=false;document.getElementById('current-turn').textContent='Jugador';if(pH.length===0&&d.length>0){uM("No tienes cartas. Pulsa 'Go Fisch' para robar.");document.getElementById('ask-btn').disabled=true;}else if(pH.length>0){uM("Es tu turno. Selecciona una carta para pedir al bot.");}else{uM("No tienes cartas y no quedan en el mazo. Turno del bot.");eBT();}}
+        function eBT(){cT='b';document.getElementById('ask-btn').disabled=true;document.getElementById('go-fisch-btn').disabled=true;document.getElementById('current-turn').textContent='Bot';setTimeout(bT,1500);}
+        function bT(){if(bH.length===0){if(d.length>0){dCB();}else{uM("El bot no tiene cartas para pedir. Tu turno.");ePT();}return;}const bV=bH.map(c=>c.value),uV=[...new Set(bV)],pV=uV.filter(v=>pH.some(c=>c.value===v)),sV=pV.length>0?pV[Math.floor(Math.random()*pV.length)]:uV[Math.floor(Math.random()*uV.length)];uM(`El bot pregunta: ¿Tienes algún ${sV}?`);bAA++;const mC=pH.filter(c=>c.value===sV);if(mC.length>0){bSA++;setTimeout(()=>{uM(`¡Tienes ${mC.length} ${sV}! El bot las toma.`);pH=pH.filter(c=>c.value!==sV);bH.push(...mC);cFS('b');uI();if(bH.length>0){setTimeout(bT,1500);}else{ePT();}},1500);}else{setTimeout(()=>{uM(`No tienes ${sV}. El bot pesca una carta.`);dCB(sV);},1500);}}
+        function dCB(rV=null){if(d.length>0){const dC=d.pop();bH.push(dC);const dE=document.getElementById('deck'),r=dE.getBoundingClientRect(),tC=document.createElement('div');tC.className='card card-transition';tC.style.left=`${r.left}px`;tC.style.top=`${r.top}px`;tC.innerHTML='<div class="card-face card-back"><div class="card-back-pattern"></div></div>';document.body.appendChild(tC);setTimeout(()=>{const bA=document.querySelector('.bot-area .cards-container').getBoundingClientRect();tC.style.left=`${bA.left+20}px`;tC.style.top=`${bA.top+20}px`;tC.style.transform='scale(0.7)';tC.style.opacity='0.7';setTimeout(()=>{tC.remove();uM(`El bot pescó una carta.`);if(rV&&dC.value===rV&&bH.length>0){setTimeout(()=>{uM(`¡El bot pescó el ${rV} que pedía! Juega de nuevo.`);uI();setTimeout(bT,1500);},1500);}else{uI();ePT();}},500);},10);}else{uM("No quedan cartas para pescar. Tu turno.");ePT();}}
+        function aFC(){if(cT!=='p'||sC===null||pH.length===0)return;const sV=pH[sC].value;uM(`Pides al bot: ¿Tienes algún ${sV}?`);pAA++;const mC=bH.filter(c=>c.value===sV);if(mC.length>0){pSA++;setTimeout(()=>{uM(`¡El bot tiene ${mC.length} ${sV}(s)! Las tomas.`);bH=bH.filter(c=>c.value!==sV);pH.push(...mC);cFS('p');uI();sC=null;if(pH.length>0){ePT();}else{eBT();}},1500);}else{setTimeout(()=>{uM(`El bot no tiene ${sV}. Pesca una carta.`);gF(true);},1500);}document.getElementById('ask-btn').disabled=true;}
+        function gF(fA=false){if(cT!=='p')return;if(d.length>0){const dC=d.pop();pH.push(dC);const dE=document.getElementById('deck'),r=dE.getBoundingClientRect(),tC=document.createElement('div');tC.className='card card-transition';tC.style.left=`${r.left}px`;tC.style.top=`${r.top}px`;tC.innerHTML='<div class="card-face card-back"><div class="card-back-pattern"></div></div>';document.body.appendChild(tC);setTimeout(()=>{const pC=document.getElementById('player-cards'),pR=pC.getBoundingClientRect();tC.style.left=`${pR.left+20}px`;tC.style.top=`${pR.top+20}px`;tC.style.transform='scale(0.7)';tC.style.opacity='0.7';setTimeout(()=>{tC.remove();uM(`Pescaste una carta. ${fA?'':'Turno del bot.'}`);uI();if(fA){const sV=sC!==null?pH[sC]?.value:null;if(sV&&dC.value===sV){setTimeout(()=>{uM(`¡Pescaste el ${sV} que pedías! Juega de nuevo.`);ePT();},1500);}else{eBT();}}else{eBT();}sC=null;},500);},10);}else{uM("No quedan cartas para pescar. Turno del bot.");eBT();sC=null;}}
+        function cFS(p){const h=p==='p'?pH:bH,vc={};h.forEach(c=>{vc[c.value]=(vc[c.value]||0)+1;});for(const[v,ct]of Object.entries(vc)){if(ct>=4){if(p==='p'){pH=pH.filter(c=>c.value!==v);pS++;document.getElementById('player-sets').textContent=pS;document.getElementById('player-sets-stat').textContent=pS;uM(`¡Completaste un juego de ${v}!`);}else{bH=bH.filter(c=>c.value!==v);bS++;document.getElementById('bot-sets').textContent=bS;document.getElementById('bot-sets-stat').textContent=bS;uM(`¡El bot completó un juego de ${v}!`);}}}cGE();uSt();}
+        function cGE(){if(d.length===0&&(pH.length===0||bH.length===0)){setTimeout(()=>{if(pS>bS){uM(`¡Ganaste! Juegos completados: ${pS} a ${bS}`);}else if(bS>pS){uM(`¡El bot ganó! Juegos completados: ${bS} a ${pS}`);}else{uM(`¡Empate! Ambos completaron ${pS} juegos.`);}document.getElementById('ask-btn').disabled=true;document.getElementById('go-fisch-btn').disabled=true;},1000);}}
+        function uM(t){document.getElementById('message').textContent=t;}
+        function uS(){document.getElementById('player-sets').textContent=pS;document.getElementById('bot-sets').textContent=bS;}
+        function uSt(){document.getElementById('player-card-count').textContent=pH.length;document.getElementById('bot-card-count').textContent=bH.length;const pR=pAA>0?Math.round((pSA/pAA)*100):0,bR=bAA>0?Math.round((bSA/bAA)*100):0;document.getElementById('player-success-rate').textContent=`${pR}%`;document.getElementById('bot-success-rate').textContent=`${bR}%`;document.getElementById('player-success-bar').style.width=`${pR}%`;document.getElementById('bot-success-bar').style.width=`${bR}%`;uP();}
+        function uP(){const pl=document.getElementById('probability-list');pl.innerHTML='';if(cT!=='p'){pl.innerHTML='<p>Es el turno del bot</p>';return;}const v=['A','2','3','4','5','6','7','8','9','10','J','Q','K'],pb={};v.forEach(val=>{const sC=pH.filter(c=>c.value===val).length,tC=4,rC=tC-sC,tU=bH.length+d.length;if(rC>0&&tU>0){const p=Math.round((1-Math.pow((tU-rC)/tU,bH.length))*100);pb[val]=p;}else{pb[val]=0;}});const sV=Object.entries(pb).sort((a,b)=>b[1]-a[1]);sV.forEach(([val,prob])=>{const i=document.createElement('div');i.className='probability-item';const c=document.createElement('div');c.className='probability-card';c.textContent=val;const p=document.createElement('div');p.className='probability-value';p.textContent=`${prob}%`;const bc=document.createElement('div');bc.className='probability-bar-container';const b=document.createElement('div');b.className='probability-bar';b.style.width=`${prob}%`;bc.appendChild(b);i.appendChild(c);i.appendChild(p);i.appendChild(bc);pl.appendChild(i);});}
+        document.getElementById('ask-btn').addEventListener('click',aFC);document.getElementById('go-fisch-btn').addEventListener('click',()=>gF(false));iG();
+    </script>
+</body>
+</html>
